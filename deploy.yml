@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: kimhong2411/ktinfra4:0727
+        image: kimhong2411/ktcloudinfra4:0727
         ports:
         - containerPort: 80
 ---
