@@ -19,20 +19,28 @@ pipeline {
 
     stage('Build and Push Image') {
       steps {
-        script {
-          docker.withRegistry(
-            'https://index.docker.io/v1/',
-            'dockerhub-credentials'
-          ) {
-            def builtImage =
-              docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
-
-            builtImage.push()
-          }
+        withCredentials([
+          usernamePassword(
+            credentialsId: 'dockerhub-credentials',
+            usernameVariable: 'DOCKERHUB_USER',
+            passwordVariable: 'DOCKERHUB_TOKEN'
+          )
+        ]) {
+          sh '''
+            set +x
+            echo "$DOCKERHUB_TOKEN" |
+              docker login -u "$DOCKERHUB_USER" --password-stdin
+            set -x
+    
+            trap 'docker logout >/dev/null 2>&1 || true' EXIT
+    
+            docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
+            docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+          '''
         }
       }
     }
-
+    
     stage('Copy deploy.yml to Master') {
       steps {
         sh '''
